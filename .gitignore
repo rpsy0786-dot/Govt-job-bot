@@ -1,0 +1,19 @@
+# Environment secrets - never commit real tokens
+.env
+
+# SQLite auxiliary files (jobs.db itself IS committed by the CI workflow
+# so duplicate-detection state persists across scheduled runs)
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Logs / OS cruft
+*.log
+.DS_Store

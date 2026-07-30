@@ -1,0 +1,42 @@
+name: Daily Government Jobs Scraper & Telegram Notifier
+
+on:
+  schedule:
+    # 09:00 IST = 03:30 UTC
+    - cron: "30 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  scrape-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper pipeline
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m bot.main --cron
+
+      # GitHub Actions runners are ephemeral - jobs.db (which holds the
+      # duplicate-detection history) would be wiped after every run unless
+      # we persist it by committing it back to the repository.
+      - name: Persist jobs database
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add jobs.db || true
+          git diff --cached --quiet || git commit -m "chore: update jobs database [skip ci]"
+          git push || true
